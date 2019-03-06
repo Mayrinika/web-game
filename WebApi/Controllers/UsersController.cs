@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
@@ -16,8 +17,8 @@ namespace WebApi.Controllers
             Repository = repository;
         }
 
-        [HttpGet("{userId}")]
-        
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
+
         [HttpHead("{userId}")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -29,9 +30,20 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        public IActionResult CreateUser([FromBody] NewUserDto user)
         {
-            throw new NotImplementedException();
+            if (user == null)
+                return BadRequest();
+            var createdUserEntity = Mapper.Map<UserEntity>(user);
+            if (!Regex.IsMatch(user.Login, @"^[a-zA-Z0-9]+$"))
+                ModelState.AddModelError("Login", "Неправильный логин");
+            if (!ModelState.IsValid)
+                return new UnprocessableEntityObjectResult(ModelState);
+            createdUserEntity = Repository.Insert(createdUserEntity);
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
         }
     }
 }

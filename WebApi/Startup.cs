@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebGame.Domain;
 using WebApi.Models;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace WebApi
 {
@@ -33,18 +35,23 @@ namespace WebApi
                 options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                 // Эта настройка позволяет отвечать кодом 406 Not Acceptable на запросы неизвестных форматов.
                 options.ReturnHttpNotAcceptable = true;
+            })
+            .AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
             });
             Mapper.Initialize(cfg =>
-          {
-                // Регистрация преобразования UserEntity в UserDto с дополнительным правилом.
-                // Также поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
-                cfg.CreateMap<UserEntity, UserDto>()
-                  .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+            {
+              // Регистрация преобразования UserEntity в UserDto с дополнительным правилом.
+              // Также поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
+              cfg.CreateMap<UserEntity, UserDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+              // Регистрация преобразования UserToUpdateDto в UserEntity без дополнительных правил.
+              // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
+              cfg.CreateMap<NewUserDto, UserEntity>();
+          });
 
-                // Регистрация преобразования UserToUpdateDto в UserEntity без дополнительных правил.
-                // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
-                // cfg.CreateMap<UserToUpdateDto, UserEntity>();
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
