@@ -50,6 +50,7 @@ namespace WebApi
               // Регистрация преобразования UserToUpdateDto в UserEntity без дополнительных правил.
               // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
               cfg.CreateMap<NewUserDto, UserEntity>();
+              cfg.CreateMap<PutDto, UserEntity>();
           });
 
         }

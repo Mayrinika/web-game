@@ -56,5 +56,50 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
+        [HttpPut("{userId}")]
+        public ActionResult<UserDto> UpdateUser([FromRoute] Guid userId, [FromBody] PutDto updateUser)
+        {
+             if(userId==Guid.Empty || updateUser==null)
+                return BadRequest();
+
+            if(updateUser.Login==null)
+                {
+                    ModelState.AddModelError("Login", "Пустой логин");
+                    return new UnprocessableEntityObjectResult(ModelState);
+                }
+            if(updateUser.FirstName == null)
+                {
+                    ModelState.AddModelError("FirstName", "Отсутвует имя");
+                    return new UnprocessableEntityObjectResult(ModelState);
+                }
+            if(updateUser.LastName==null)
+                {
+                    ModelState.AddModelError("LastName", "Отсутвует фамилия");
+                    return new UnprocessableEntityObjectResult(ModelState);
+                }
+            if (!Regex.IsMatch(updateUser.Login, @"^[a-zA-Z0-9]+$"))
+                {
+                    ModelState.AddModelError("Login", "Неправильный логин");
+                    return new UnprocessableEntityObjectResult(ModelState);
+                }
+
+            var user = Repository.FindById(userId);
+
+            if (user == null)
+            {
+                user = new UserEntity(userId);
+                Mapper.Map(updateUser, user);
+                Repository.UpdateOrInsert(user);
+                return CreatedAtRoute(
+                    nameof(GetUserById),
+                    new { userId = userId },
+                    userId);
+            }
+           
+            Mapper.Map(updateUser, user);
+            Repository.Update(user);
+            return NoContent();
+        }
+
     }
 }
