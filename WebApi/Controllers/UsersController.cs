@@ -45,5 +45,16 @@ namespace WebApi.Controllers
                 new { userId = createdUserEntity.Id },
                 createdUserEntity.Id);
         }
+
+        [HttpDelete("{userId}")]
+        public ActionResult<UserDto> DeleteUser([FromRoute] Guid userId)
+        {
+            var user = Repository.FindById(userId);
+            Repository.Delete(userId);
+            if (user == null)
+                return NotFound();
+            return NoContent();
+        }
+
     }
 }
