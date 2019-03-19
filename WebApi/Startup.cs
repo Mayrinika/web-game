@@ -9,6 +9,7 @@ using WebGame.Domain;
 using WebApi.Models;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
+using WebApi.Samples;
 
 namespace WebApi
 {
@@ -53,6 +54,8 @@ namespace WebApi
               cfg.CreateMap<PutDto, UserEntity>();
           });
 
+          services.AddSwaggerGeneration();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +71,8 @@ namespace WebApi
                 app.UseHsts();
             }
 
+            app.UseSwaggerWithUI();
+            
             app.UseHttpsRedirection();
             app.UseMvc();
         }

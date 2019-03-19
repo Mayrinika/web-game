@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 using WebGame.Domain;
@@ -59,29 +60,29 @@ namespace WebApi.Controllers
         [HttpPut("{userId}")]
         public ActionResult<UserDto> UpdateUser([FromRoute] Guid userId, [FromBody] PutDto updateUser)
         {
-             if(userId==Guid.Empty || updateUser==null)
+            if (userId == Guid.Empty || updateUser == null)
                 return BadRequest();
 
-            if(updateUser.Login==null)
-                {
-                    ModelState.AddModelError("Login", "Пустой логин");
-                    return new UnprocessableEntityObjectResult(ModelState);
-                }
-            if(updateUser.FirstName == null)
-                {
-                    ModelState.AddModelError("FirstName", "Отсутвует имя");
-                    return new UnprocessableEntityObjectResult(ModelState);
-                }
-            if(updateUser.LastName==null)
-                {
-                    ModelState.AddModelError("LastName", "Отсутвует фамилия");
-                    return new UnprocessableEntityObjectResult(ModelState);
-                }
+            if (updateUser.Login == null)
+            {
+                ModelState.AddModelError("Login", "Пустой логин");
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+            if (updateUser.FirstName == null)
+            {
+                ModelState.AddModelError("FirstName", "Отсутвует имя");
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+            if (updateUser.LastName == null)
+            {
+                ModelState.AddModelError("LastName", "Отсутвует фамилия");
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
             if (!Regex.IsMatch(updateUser.Login, @"^[a-zA-Z0-9]+$"))
-                {
-                    ModelState.AddModelError("Login", "Неправильный логин");
-                    return new UnprocessableEntityObjectResult(ModelState);
-                }
+            {
+                ModelState.AddModelError("Login", "Неправильный логин");
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
 
             var user = Repository.FindById(userId);
 
@@ -95,8 +96,26 @@ namespace WebApi.Controllers
                     new { userId = userId },
                     userId);
             }
-           
+
             Mapper.Map(updateUser, user);
+            Repository.Update(user);
+            return NoContent();
+        }
+
+        [HttpPatch("{userId}")]
+        public ActionResult<UserDto> PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserEntity> patchDoc)
+        {
+            var user = Repository.FindById(userId);
+            if (patchDoc == null)
+                return BadRequest();
+            if (user == null)
+                return NotFound();
+            /*if(!TryValidateModel(patchDoc))
+            {
+                ModelState.AddModelError("Login", "Пустой логин");
+                return new UnprocessableEntityObjectResult(ModelState);
+            } */
+            patchDoc.ApplyTo(user, ModelState);
             Repository.Update(user);
             return NoContent();
         }
